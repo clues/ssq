@@ -949,7 +949,7 @@ code_change(OldVsn, State, Extra) ->
 
 load_from_file(File) ->
 	{ok,Io} = file:open(File, [read]),
-	loop_read_cp126(Io,[],[]).
+	loop_read_history(Io,[],[]).
 
 loop_read(Io,Rest) ->
 	case file:read_line(Io) of
@@ -962,7 +962,7 @@ loop_read(Io,Rest) ->
 			Rest
 	end.
 
-loop_read_cp126(Io,R1,R2) ->
+loop_read_history(Io,R1,R2) ->
 	case file:read_line(Io) of
 		{ok,Data} ->
 			Lstr = string:tokens(Data, " \t"),
@@ -979,7 +979,7 @@ loop_read_cp126(Io,R1,R2) ->
 										{list_to_integer(H),list_to_integer(B),hd(C)-48}
 								end,
 								[R|AccIn] end, [], lists:sublist(Lstr, 15,5)),				
-			loop_read_cp126(Io,[{Seqno,Lint}|R1],[Tongji|R2]);
+			loop_read_history(Io,[{Seqno,Lint}|R1],[Tongji|R2]);
 		_ ->
 			{R1,R2}
 	end.	
