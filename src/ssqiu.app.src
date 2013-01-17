@@ -1,0 +1,12 @@
+{application, ssqiu,
+ [
+  {description, ""},
+  {vsn, "1"},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib
+                 ]},
+  {mod, { ssqiu_app, []}},
+  {env, []}
+ ]}.
