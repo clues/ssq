@@ -131,7 +131,7 @@ auto_filter(xiehao,Mod) ->
 auto_filter(yu,{Yu,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,yu,{Yu,Mod}});
 
-%% Part 12, 11,8,6,5
+%% Part 12->2, 11->3,8->4,6->5,5->6
 auto_filter(part,{Part,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,part,{Part,Mod}});
 
@@ -948,6 +948,7 @@ code_change(OldVsn, State, Extra) ->
 
 
 load_from_file(File) ->
+	error_logger:info_msg("path::::::~p~n", [File]),
 	{ok,Io} = file:open(File, [read]),
 	loop_read_history(Io,[],[]).
 

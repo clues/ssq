@@ -11,7 +11,8 @@
 		 auto_filter/0,
 		 auto_filter/2,
 		 range2/2,
-		 anlyse/1
+		 anlyse/1,
+		 anlyse2/1
 		 ]).
 -include("ssq.hrl").
 
@@ -144,6 +145,19 @@ anlyse([{CV,{VL,VR},Mod}|T],R) when VR =<CV  ->
 	anlyse(T,[1|R]);
 anlyse([{CV,{VL,VR},Mod}|T],R) ->
 	anlyse(T,R).
+
+%%{Min,Max}
+%%Value choosed,must meet Min =< Value =< Max
+anlyse2(L) ->
+	anlyse2(L,{[0],[999]}).
+anlyse2([],{MaxL,MinR}) ->
+	[{min,lists:max(MaxL)},{max,lists:min(MinR)}];
+anlyse2([{CV,{VL,VR},X,_}|T],{MaxL,MinR}) ->
+	anlyse2([{CV,{VL,VR},X}|T],{MaxL,MinR});
+anlyse2([{CV,{VL,VR},_}|T],{MaxL,MinR}) when CV < VL->
+	anlyse2(T,{[VL-CV|MaxL],MinR});
+anlyse2([{CV,{VL,VR},_}|T],{MaxL,MinR}) when CV =< VR ->
+	anlyse2(T,{MaxL,[VR-CV|MinR]}).
 
 auto_filter() ->
 
