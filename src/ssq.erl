@@ -92,7 +92,7 @@ auto_filter(he_range,{Spoint,Mod}) ->
 %%Range include left and right
 auto_filter(he_spread,{Range,Mod}) ->
 	R = {CurrentValue,R2,Spoint,Mod} = ssqiu_server:auto_filter(he_spread,{Range,Mod}),
-	error_logger:info_msg("~p -- auto_filter he_spread:~p~n", [?MODULE,R]),
+%% 	error_logger:info_msg("~p -- auto_filter he_spread:~p~n", [?MODULE,R]),
 	R;
 
 auto_filter(repeat,Mod) ->

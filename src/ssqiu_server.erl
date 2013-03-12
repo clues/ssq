@@ -85,6 +85,13 @@ temp(exclude,L) ->
 temp(include,L) ->
 	gen_server:call(?MODULE, {temp,{include,L}});
 
+%% need meet all
+temp(part,[{ST,ED},{Min,Max}]) ->
+	gen_server:call(?MODULE, {temp,{part,[{ST,ED},{Min,Max}]}});
+
+temp(rem_he,{Rem,{Min,Max}}) ->
+	gen_server:call(?MODULE, {temp,{rem_he,Rem,{Min,Max}}});
+
 %% need meet all L = [1-33]
 temp(yu,L) ->
 	gen_server:call(?MODULE, {temp,{yu,L}});
@@ -131,9 +138,17 @@ auto_filter(xiehao,Mod) ->
 auto_filter(yu,{Yu,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,yu,{Yu,Mod}});
 
-%% Part 12->2, 11->3,8->4,6->5,5->6
+%% Part->captity 
+%% 16->cap:2
+%% 11->cap:3
+%%  8->cap:4
+%%  6->cap:5
+%%  5->cap:6
 auto_filter(part,{Part,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,part,{Part,Mod}});
+
+auto_filter(rem_he,{Rem,Mod}) ->
+	gen_server:call(?MODULE, {auto_filter,rem_he,{Rem,Mod}});
 
 auto_filter(he_012,Mod) ->
 	[RR0,RR1,RR2] = ssqiu_server:info_r(he_012, Mod),
@@ -273,6 +288,44 @@ handle_call({temp,{include,L}}, From, #state{history=History,temp=TP,tongji=TJ}=
 	error_logger:info_msg("~p [INCLUDE]-- check out ~p from ~p,when case:~p", [?MODULE,
 																	  length(RR),
 																	  length(hd(TP)),L]),		
+	{reply, {length(TP),length(RR),RR}, State#state{temp=[RR|TP]}};
+
+handle_call({temp,{part,[{Rang1,Rang2},{Min,Max}]}=Con}, From, #state{history=History,temp=TP,tongji=TJ}=State) ->	
+	RR = lists:foldl(fun(H,AccIn) ->
+							N = lists:foldl(fun(X,AccIn) ->
+												if
+													Rang1 =< X,X =< Rang2 ->
+														AccIn+1;
+													true ->
+														AccIn
+												end
+										end, 0, H), 
+							if
+								Min =< N,N =< Max ->
+									[H|AccIn];
+								true ->
+									AccIn
+							end						
+				end, [], hd(TP)),
+	error_logger:info_msg("~p [PART]-- check out ~p from ~p,when case:~p", [?MODULE,
+																	  length(RR),
+																	  length(hd(TP)),Con]),	
+	{reply, {length(TP),length(RR),RR}, State#state{temp=[RR|TP]}};
+
+handle_call({temp,{rem_he,Rem,{Min,Max}}=Con}, From, #state{history=History,temp=TP,tongji=TJ}=State) ->	
+	RR = lists:foldl(fun(H,AccIn) ->
+							Sum = lists:sum(H),
+							Val = Sum rem Rem,
+							if
+								Min =< Val,Val =< Max ->
+									[H|AccIn];
+								true ->
+									AccIn
+							end			
+				end, [], hd(TP)),
+	error_logger:info_msg("~p [REM_HE]-- check out ~p from ~p,when case:~p", [?MODULE,
+																	  length(RR),
+																	  length(hd(TP)),Con]),	
 	{reply, {length(TP),length(RR),RR}, State#state{temp=[RR|TP]}};
 
 handle_call({temp,{yu,L}}, From, #state{history=History,temp=TP,tongji=TJ}=State) ->	
@@ -461,20 +514,11 @@ handle_call({temp,{tail,L}}, From, #state{history=History,temp=TP,tongji=TJ}=Sta
 
 handle_call({temp,{link,L}}, From, #state{history=History,temp=TP,tongji=TJ}=State) ->	
 	RR = lists:foldl(fun(H,AccIn) ->
-						 LL = local_call_link_num(H,[]),
-						 N = lists:foldl(fun(X,Acc0) ->
-											 Flag = lists:member(X, L),
-											 if 
-												 Flag ->
-													 Acc0+1;
-												 true ->
-													 Acc0
-											 end
-											end, 0, LL),
-						 if
-							 N > 0 ->
-								 [H|AccIn];
+						 X = local_call_link_num(H),
+						 case lists:member(X, L) of
 							 true ->
+								 [H|AccIn];
+							 false ->
 								 AccIn
 						 end
 				end, [], hd(TP)),
@@ -691,6 +735,25 @@ handle_call({auto_filter,yu,{Yu,Mod}}, From, #state{history=History,raw=Raw,tong
 	CurrntValue = Fun_Range(lists:sublist(History, Mod-1)),
 	{reply, {CurrntValue,Range,Yu,Mod}, State};
 
+handle_call({auto_filter,rem_he,{Rem,Mod}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
+	    
+	Fun_Range = fun(L) ->
+				  lists:foldl(fun([_,_,Sum,_,_],Acc0) ->
+							  		 Val = Sum rem Rem,
+									 Val+Acc0
+									 end ,0, L)
+				end,
+	
+	MaxIndex = length(TJ) - Mod+1,
+	RR1 = lists:foldl(fun(Index,Acc0)->
+						ModL = lists:sublist(TJ, Index,Mod),
+						Value = Fun_Range(ModL),
+						[Value|Acc0]
+					end, [], lists:seq(1, MaxIndex)),
+	Range={Min,Max} = {lists:min(RR1),lists:max(RR1)},
+	CurrntValue = Fun_Range(lists:sublist(TJ, Mod-1)),
+	{reply, {CurrntValue,Range,Rem,Mod}, State};
+
 handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
 	   Based = lists:foldl(fun(Index,Acc) ->
 						Old = element(2,lists:nth(Index+1, History)),
@@ -708,6 +771,7 @@ handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw
 									end, Acc, element(2,lists:nth(Index, History))) 
 					end, 0, lists:seq(1, Mod-1)),
 	{reply, {Based,{Min,Max},Mod}, State};
+
 
 
 handle_call({auto_filter,part,{Part,Mod}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
@@ -993,22 +1057,31 @@ save_and_print(RR,Raw) ->
     file:write_file(filename:join(?TEST_PATH, ?LAST_FILE), RR),
 	ok.
 
-
+local_call_link_num(L) ->
+	local_call_link_num(L,[]).
 local_call_link_num(L,R) when length(L) == 1 ->
 	Sum = lists:sum(R),
 	case Sum of
 		0 ->
-			[0];
+			0;
 		5 ->
-			[6];
+			6;
 		1 ->
-			[2];
+			2;
+		2 when R == [1,1,0,0,0];R == [0,1,1,0,0];R == [0,0,1,1,0];R == [0,0,0,1,1]->
+			3;
 		2 ->
-			[3,4];
+			4;
+		3 when R == [1,0,1,0,1]->
+			6;
+		3 when R == [1,1,1,0,0];R == [0,1,1,1,0];R == [0,0,1,1,1]->
+			4;
 		3 ->
-			[4,5,6];
+			5;
+		4 when R == [1,1,1,0,1];R == [1,0,1,1,1];R == [1,1,0,1,1]->
+			6;
 		4 ->
-			[5,6]
+			5
 	end;	
 		
 local_call_link_num([H|T],R) ->

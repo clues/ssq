@@ -13,8 +13,10 @@ all() ->[
 %% 		test_anlyse_xiehao
 %% 		test_shake
 %% 		test_he_rang_10
+%% 		test_rem_he
 %% 		test_part
 %% 		test_anlyse_yu
+%% 		test_anlyse_he_spread
 		test_omg
 		].
 
@@ -30,17 +32,22 @@ end_per_suite(_Config) ->
 test_omg(_) ->
 	ssqiu_server:start_link(),
 	L = [
-		 {head,[1,2,3,4,5]},
+%% 		 {head,[2]},
 %% 		 {med,[]},
-		 {tail,[2]},
-		 {repeat_tongji,[0]},
-		 {link,[2,3]},
-		 {range_sum,{74,74}},
-		 {jishu,[2]},
-%% 		 {xiehao,[0,1,2,3,4]},
-%% 		 {he_012,[2]},
-		 {include,[33]},
-		 {exclude,[30,29,28,27,26,25]}
+%% 		 {tail,[3,4,5]},
+		 {repeat_tongji,[0,1]},
+		 {link,[0,2,3,4,5]},
+		 {range_sum,{99,140}},
+		 {jishu,[5]},
+		 {xiehao,[0,1]},
+%% 		 {part,[{7,10},{2,11}]},
+%% 		 {part,[{19,24},{3,7}]},
+%% 		 {part,[{21,25},{1,7}]},
+		 {rem_he,{5,{1,9}}},
+		 {rem_he,{6,{5,11}}},
+		 {he_012,[2]},
+		 {include,[12,33]}
+%% 		 {exclude,[1,2,3,4,5,6]}
 %% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]}
 %% 		 {yu,[7,21]}
 		],
@@ -109,25 +116,16 @@ test_anlyse_yu(_) ->
 
 test_anlyse_he_spread(_) ->
 	ssqiu_server:start_link(),
+	Seq = lists:foldl(fun(X,Accin) ->
+						[{X,X}|Accin]
+				end, [], lists:seq(0, 50)),
 	RR=lists:foldl(fun(X,Acc0) ->
-						L =[ 
-						ssq:auto_filter(he_spread,{X,10}),
-						ssq:auto_filter(he_spread,{X,20}),
-						ssq:auto_filter(he_spread,{X,30}),
-						ssq:auto_filter(he_spread,{X,40}),
-						ssq:auto_filter(he_spread,{X,50}),
-						ssq:auto_filter(he_spread,{X,60})],
-						[{X,ssq:anlyse(L)}|Acc0]
-						end, [],[{0,3},{3,6},{6,9},{9,12},{12,15},
-								 {15,18},{18,21},{21,24},{24,27},
-								 {27,30},{30,33},{33,36},{36,39},
-								 {39,42},
-								 {42,45},
-								 {45,48},
-								 {40,48},
-								 {7,7}]),
-	
-	error_logger:info_msg("~p -- anlyse_he_spread:~p~n", [?MODULE,RR]),
+						RR = lists:foldl(fun(Mod,AccIn) ->
+											V = ssq:auto_filter(he_spread,{X,Mod}),
+							 				[V|AccIn]
+									end, [], lists:seq(7, 70)),
+						error_logger:info_msg("~p -- anlyse_he_spread_~p:~p~n", [?MODULE,X,ssq:anlyse2(RR)])
+				   end, [],lists:reverse(Seq)),
 	ok.	
 
 test_he012(_) ->
@@ -146,6 +144,18 @@ test_he012(_) ->
 	error_logger:info_msg("~p -- he_012_0 result:~p~n", [?MODULE,ssq:anlyse2(Fun(R,1))]),
 	error_logger:info_msg("~p -- he_012_1 result:~p~n", [?MODULE,ssq:anlyse2(Fun(R,2))]),
 	error_logger:info_msg("~p -- he_012_2 result:~p~n", [?MODULE,ssq:anlyse2(Fun(R,3))]),
+	ok.
+
+%%use 2 to fliter odd-even
+test_rem_he(_) ->
+	ssqiu_server:start_link(),
+	lists:foreach(fun(Rem) ->
+		R = lists:foldl(fun(Mod,AccIn) ->
+						V = ssqiu_server:auto_filter(rem_he, {Rem,Mod}),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+						error_logger:info_msg("~p -- rem_he_~p result1:~p~n", [?MODULE,Rem,ssq:anlyse2(R)])
+					end, lists:seq(1, 10)),
 	ok.
 
 test_shake(_) ->
@@ -167,15 +177,27 @@ test_shake(_) ->
 
 
 test_part(_) ->
-	ssqiu_server:start_link(),	
+	ssqiu_server:start_link(),
+	Reogr_Fun = fun(L,Part) ->
+						Len = map(Part),
+						R2 = lists:foldl(fun(Index,AccIn) ->
+											R = lists:foldl(fun(L1,AccIn1) ->
+																[lists:nth(Index, L1)|AccIn1]
+														end, [], L),
+											error_logger:info_msg("~p -- part_~p_~p result:~p~n", [?MODULE,Len,Index,ssq:anlyse2(R)])
+									end, [],lists:seq(1, Len)) 
+				end,
+						
+										
+					
 	Fun = fun(Part) ->
 				  R = lists:foldl(fun(Mod,AccIn) ->
 						V = ssqiu_server:auto_filter(part, {Part,Mod}),
 						[V|AccIn]
 				end, [], lists:seq(7, 70)),
-			error_logger:info_msg("~p -- part_~p result:~p~n", [?MODULE,Part,R])
+				Reogr_Fun(R,Part)
 		  end,
-	lists:foreach(Fun, [5,6,8,11,12]),
+	lists:foreach(Fun, [5,6,8,11,16]),
 	ok.
 
 test_he_rang_10(_) ->
@@ -185,7 +207,21 @@ test_he_rang_10(_) ->
 						V = ssqiu_server:auto_filter(he_range, {Point,Mod}),
 						[V|AccIn]
 				end, [], lists:seq(7, 70)),
-			error_logger:info_msg("~p -- he_range_Point_~p result:~p~n", [?MODULE,Point,R])
+%% 				error_logger:info_msg("~p -- he_range_Point_~p result:~p~n", [?MODULE,Point,R]),
+				error_logger:info_msg("~p -- he_range_Point_~p result:~p~n", [?MODULE,Point,ssq:anlyse2(R)])
 		  end,
+	
 	lists:foreach(Fun, [60,70,80,90,100,110,120,130,140,150,160]),
 	ok.
+
+%%map() ->Part
+map(5) ->
+	6;
+map(6) ->
+	7;
+map(8) ->
+	9;
+map(11) ->
+	11;
+map(16) ->
+	16.
