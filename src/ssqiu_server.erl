@@ -147,8 +147,14 @@ auto_filter(yu,{Yu,Mod}) ->
 auto_filter(part,{Part,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,part,{Part,Mod}});
 
+auto_filter(rem_same,{Rem,Mod}) ->
+	gen_server:call(?MODULE, {auto_filter,rem_same,{Rem,Mod}});
+
 auto_filter(rem_he,{Rem,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,rem_he,{Rem,Mod}});
+
+auto_filter(link_he,Mod) ->
+	gen_server:call(?MODULE, {auto_filter,link_he,Mod});
 
 auto_filter(he_012,Mod) ->
 	[RR0,RR1,RR2] = ssqiu_server:info_r(he_012, Mod),
@@ -754,6 +760,25 @@ handle_call({auto_filter,rem_he,{Rem,Mod}}, From, #state{history=History,raw=Raw
 	CurrntValue = Fun_Range(lists:sublist(TJ, Mod-1)),
 	{reply, {CurrntValue,Range,Rem,Mod}, State};
 
+handle_call({auto_filter,link_he,Mod}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
+	    
+	Fun_Range = fun(L) ->
+				  lists:foldl(fun([_,Link,_,_,_],Acc0) ->
+									 Acc0+Link
+									 end ,0, L)
+				end,
+	
+	MaxIndex = length(TJ) - Mod+1,
+	RR1 = lists:foldl(fun(Index,Acc0)->
+						ModL = lists:sublist(TJ, Index,Mod),
+						Value = Fun_Range(ModL),
+						[Value|Acc0]
+					end, [], lists:seq(1, MaxIndex)),
+	Range={Min,Max} = {lists:min(RR1),lists:max(RR1)},
+	CurrntValue = Fun_Range(lists:sublist(TJ, Mod-1)),
+	{reply, {CurrntValue,Range,Mod}, State};
+
+
 handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
 	   Based = lists:foldl(fun(Index,Acc) ->
 						Old = element(2,lists:nth(Index+1, History)),
@@ -771,6 +796,61 @@ handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw
 									end, Acc, element(2,lists:nth(Index, History))) 
 					end, 0, lists:seq(1, Mod-1)),
 	{reply, {Based,{Min,Max},Mod}, State};
+
+
+
+handle_call({auto_filter,rem_same,{Rem,Mod}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
+	
+	%% init
+	FUN_INIT = fun() ->				   
+		lists:foreach(fun(X) ->
+							Name = list_to_atom(lists:concat(["part",X])),
+							put(Name,[]),							
+						  	put(X,0)
+				  	end, lists:seq(1, 6))
+		end,
+	
+	FUN_INIT(),
+	FUN_ONE = fun(L) ->
+					  lists:foldl(fun(X,Acc0) ->
+										  Val = X rem Rem,
+										  Flag = lists:member(Val, Acc0),
+										  if
+											  Flag ->
+												  Acc0;
+											  true ->
+												  [Val|Acc0]
+										  end
+									end, [], L)
+			  end,
+	
+	FUN_RANGE = fun(Range,AccIn) ->
+						lists:foldl(fun({_,Intl},AccIn0) ->
+											Count = length(FUN_ONE(Intl)),
+											put(Count,get(Count)+1)
+									end, AccIn, Range)
+				end,
+	
+	MaxIndex = length(History) - Mod+1,
+	lists:foldl(fun(Index,AccIn) ->
+						SubList = lists:sublist(History, Index,Mod),
+						FUN_RANGE(SubList,0),
+						lists:foreach(fun(X) ->
+									Name = list_to_atom(lists:concat(["part",X])),
+									put(Name,[get(X)|get(Name)]),
+									put(X,0)
+									end, lists:seq(1, 6))
+				end, [], lists:seq(1, MaxIndex)),
+	
+	FUN_RANGE(lists:sublist(History, Mod-1),0),
+	
+	R = lists:foldl(fun(X,AccIn) ->
+						Name = list_to_atom(lists:concat(["part",X])),
+						L = get(Name),
+						[{get(X),{lists:min(L),lists:max(L)},Mod}|AccIn]
+						end, [], lists:seq(1, 6)),	
+	{reply, lists:reverse(R), State};
+
 
 
 

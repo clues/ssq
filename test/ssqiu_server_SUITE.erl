@@ -17,6 +17,8 @@ all() ->[
 %% 		test_part
 %% 		test_anlyse_yu
 %% 		test_anlyse_he_spread
+%% 		test_link_he
+%% 		test_rem_same
 		test_omg
 		].
 
@@ -32,24 +34,24 @@ end_per_suite(_Config) ->
 test_omg(_) ->
 	ssqiu_server:start_link(),
 	L = [
-%% 		 {head,[2]},
-%% 		 {med,[]},
-%% 		 {tail,[3,4,5]},
+		 {head,[3]},
+		 {med,[1]},
+		 {tail,[2]},
 		 {repeat_tongji,[0,1]},
 		 {link,[0,2,3,4,5]},
-		 {range_sum,{99,140}},
-		 {jishu,[5]},
-		 {xiehao,[0,1]},
-%% 		 {part,[{7,10},{2,11}]},
-%% 		 {part,[{19,24},{3,7}]},
-%% 		 {part,[{21,25},{1,7}]},
-		 {rem_he,{5,{1,9}}},
-		 {rem_he,{6,{5,11}}},
-		 {he_012,[2]},
-		 {include,[12,33]}
-%% 		 {exclude,[1,2,3,4,5,6]}
-%% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]}
-%% 		 {yu,[7,21]}
+		 {range_sum,{89,89}},
+		 {jishu,[3,5]},
+		 {xiehao,[0,1,2,3,4]},
+		 {part,[{1,6},{0,1}]},
+		 {part,[{19,24},{2,7}]},
+		 {part,[{9,10},{1,7}]},
+%% 		 {rem_he,{2,{1,6}}},
+%% 		 {rem_he,{5,{1,8}}},
+%% 		 {include,[1]},
+		 {exclude,[4,5,6,7,8]},
+%% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]},
+%% 		 {yu,[7,21]},
+		{he_012,[2]}
 		],
 	
 	lists:foreach(fun({Type,Value}) ->
@@ -153,9 +155,18 @@ test_rem_he(_) ->
 		R = lists:foldl(fun(Mod,AccIn) ->
 						V = ssqiu_server:auto_filter(rem_he, {Rem,Mod}),
 						[V|AccIn]
-				end, [], lists:seq(7, 70)),
+				end, [], lists:seq(35, 70)),
 						error_logger:info_msg("~p -- rem_he_~p result1:~p~n", [?MODULE,Rem,ssq:anlyse2(R)])
-					end, lists:seq(1, 10)),
+					end, [2,3,5,7]),
+	ok.
+
+test_link_he(_) ->
+	ssqiu_server:start_link(),	
+	RR = lists:foldl(fun(Mod,AccIn) ->
+						V = ssqiu_server:auto_filter(link_he, Mod),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+	error_logger:info_msg("~p -- link_he result:~p~n", [?MODULE,ssq:anlyse2(RR)]),
 	ok.
 
 test_shake(_) ->
@@ -198,6 +209,29 @@ test_part(_) ->
 				Reogr_Fun(R,Part)
 		  end,
 	lists:foreach(Fun, [5,6,8,11,16]),
+	ok.
+
+test_rem_same(_) ->
+	ssqiu_server:start_link(),
+	Reogr_Fun = fun(L,Part) ->
+						R2 = lists:foldl(fun(Index,AccIn) ->
+											R = lists:foldl(fun(L1,AccIn1) ->
+																[lists:nth(Index, L1)|AccIn1]
+														end, [], L),
+											error_logger:info_msg("~p -- rem_~p count_~p result:~p~n", [?MODULE,Part,Index,ssq:anlyse2(R)])
+									end, [],lists:seq(1, 6)) 
+				end,
+						
+										
+					
+	Fun = fun(Part) ->
+				  R = lists:foldl(fun(Mod,AccIn) ->
+						V = ssqiu_server:auto_filter(rem_same, {Part,Mod}),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+				Reogr_Fun(R,Part)
+		  end,
+	lists:foreach(Fun, [10,8]),
 	ok.
 
 test_he_rang_10(_) ->
