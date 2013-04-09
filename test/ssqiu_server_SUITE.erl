@@ -14,10 +14,10 @@ all() ->[
 %% 		test_shake
 %% 		test_he_rang_10
 %% 		test_rem_he
-%% 		test_part
+		test_part
 %% 		test_anlyse_yu
 %% 		test_anlyse_he_spread
-		test_omg
+%% 		test_omg
 		].
 
 suite() ->
@@ -36,20 +36,21 @@ test_omg(_) ->
 %% 		 {med,[]},
 %% 		 {tail,[3,4,5]},
 		 {repeat_tongji,[0,1]},
-		 {link,[0,2,3,4,5]},
-		 {range_sum,{99,140}},
-		 {jishu,[5]},
-		 {xiehao,[0,1]},
+		 {link,[2]},
+%% 		 {range_sum,{99,140}},
+		 {jishu,[1,3,5]},
+		 {xiehao,[0,1,2]},
 %% 		 {part,[{7,10},{2,11}]},
 %% 		 {part,[{19,24},{3,7}]},
 %% 		 {part,[{21,25},{1,7}]},
-		 {rem_he,{5,{1,9}}},
-		 {rem_he,{6,{5,11}}},
-		 {he_012,[2]},
-		 {include,[12,33]}
-%% 		 {exclude,[1,2,3,4,5,6]}
+%% 		 {rem_he,{5,{1,9}}},
+%% 		 {rem_he,{6,{5,11}}},
+		 
+		 {include,[14,22,23]},
+		 {exclude,[15]},
 %% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]}
-%% 		 {yu,[7,21]}
+%% 		 {yu,[7,21]},
+		{he_012,[2]}
 		],
 	
 	lists:foreach(fun({Type,Value}) ->
@@ -89,7 +90,7 @@ test_anlyse_tongji(_) ->
 	{RR1,RR2,RR3,RR4,RR5,RR6,RR7} = lists:foldl(fun(Mod,{L1,L2,L3,L4,L5,L6,L7}) ->
 						[R1,R2,R3,R4,R5,R6,R7] = ssq:auto_filter(tongji,Mod),
 						{[R1|L1],[R2|L2],[R3|L3],[R4|L4],[R5|L5],[R6|L6],[R7|L7]}
-				end, {[],[],[],[],[],[],[]},lists:seq(7, 70)),	
+				end, {[],[],[],[],[],[],[]},lists:seq(16, 70)),	
 	
 	error_logger:info_msg("~p -- repeat_TJ result:~p~n", [?MODULE,ssq:anlyse2(RR1)]),
 	error_logger:info_msg("~p -- link_TJ result:~p~n", [?MODULE,ssq:anlyse2(RR2)]),
@@ -108,10 +109,10 @@ test_anlyse_yu(_) ->
 		R = lists:foldl(fun(Mod,AccIn) ->
 						V = ssqiu_server:auto_filter(yu, {X,Mod}),
 						[V|AccIn]
-				end, [], lists:seq(77, 88)),	
+				end, [], lists:seq(7, 77)),	
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,R]),
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,ssq:anlyse2(R)])
-	end, [], lists:seq(3, 16)),
+	end, [], lists:seq(3, 33)),
 	ok.
 
 test_anlyse_he_spread(_) ->

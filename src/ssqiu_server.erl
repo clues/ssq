@@ -15,7 +15,7 @@
 -define(RAW_FILE,".ssq_raw").
 -define(LAST_FILE,".ssq_last").
 -define(TEMP_FILE,".ssq_temp").
--define(TEST_PATH,"/home/clues/workspace/ssqiu").
+-define(TEST_PATH,"/home/clues/workspace/ssq").
 -define(NUM_MEDIA,99).
 %% --------------------------------------------------------------------
 %% External exports
