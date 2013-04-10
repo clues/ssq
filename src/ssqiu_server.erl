@@ -17,6 +17,7 @@
 -define(TEMP_FILE,".ssq_temp").
 -define(TEST_PATH,"/home/clues/workspace/ssqiu").
 -define(NUM_MEDIA,99).
+-define(ZHISHU_LIST,[2,3,5,7,11,13,17,19,23,29,31]).
 %% --------------------------------------------------------------------
 %% External exports
 -export([start_link/0,
@@ -155,6 +156,9 @@ auto_filter(rem_he,{Rem,Mod}) ->
 
 auto_filter(link_he,Mod) ->
 	gen_server:call(?MODULE, {auto_filter,link_he,Mod});
+
+auto_filter(zhishu,Mod) ->
+	gen_server:call(?MODULE, {auto_filter,zhishu,Mod});
 
 auto_filter(he_012,Mod) ->
 	[RR0,RR1,RR2] = ssqiu_server:info_r(he_012, Mod),
@@ -783,8 +787,8 @@ handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw
 	   Based = lists:foldl(fun(Index,Acc) ->
 						Old = element(2,lists:nth(Index+1, History)),
 						lists:foldl(fun(X1,AccIn) ->
-											IS_HIG = lists:member(X1+1, Old),
-											IS_LOW = lists:member(X1-1, Old),
+											IS_HIG = lists:member(plus_1(X1), Old),
+											IS_LOW = lists:member(minus_1(X1), Old),
 											if
 												IS_HIG , IS_LOW ->
 													AccIn +2;
@@ -797,6 +801,31 @@ handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw
 					end, 0, lists:seq(1, Mod-1)),
 	{reply, {Based,{Min,Max},Mod}, State};
 
+
+handle_call({auto_filter,zhishu,Mod}, From, #state{history=History}=State) ->
+	   
+	Fun_Range = fun(L) ->
+				  lists:foldl(fun({_,L1},Acc0) ->
+									lists:foldl(fun(X,Acc1) ->
+														case lists:member(X, ?ZHISHU_LIST) of
+															true ->
+																Acc1 + 1;
+															false ->
+																Acc1
+														end
+												end, Acc0, L1)						  
+									 end ,0, L)
+				end,
+	
+	MaxIndex = length(History) - Mod+1,
+	RR1 = lists:foldl(fun(Index,Acc0)->
+						ModL = lists:sublist(History, Index,Mod),
+						Value = Fun_Range(ModL),
+						[Value|Acc0]
+					end, [], lists:seq(1, MaxIndex)),
+	Range={Min,Max} = {lists:min(RR1),lists:max(RR1)},
+	CurrntValue = Fun_Range(lists:sublist(History, Mod-1)),
+	{reply, {CurrntValue,Range,Mod}, State};
 
 
 handle_call({auto_filter,rem_same,{Rem,Mod}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
@@ -1198,8 +1227,8 @@ local_012_info([H|T],{R1,R2,R3}) ->
 local_xiehao_info([],Old,AccIn) ->
 	AccIn;
 local_xiehao_info([X|T],Old,AccIn) ->
-										IS_HIG = lists:member(X+1, Old),
-										IS_LOW = lists:member(X-1, Old),
+										IS_HIG = lists:member(plus_1(X), Old),
+										IS_LOW = lists:member(minus_1(X), Old),
 										S=if
 											IS_HIG , IS_LOW ->
 												AccIn +2;
@@ -1210,4 +1239,11 @@ local_xiehao_info([X|T],Old,AccIn) ->
 										end	,
 	local_xiehao_info(T,Old,S).
 		
-		
+plus_1(33) ->
+	1;
+plus_1(X) ->
+	X+1.
+minus_1(1) ->
+	33;
+minus_1(X) ->
+	X -1.

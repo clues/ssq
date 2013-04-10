@@ -4,7 +4,7 @@
 -module(ssqiu_server_SUITE).
 
 -compile(export_all).
--define(ACTUAL_DATA,[2,7,8,17,21,28]).
+-define(ACTUAL_DATA,[2,10,11,19,22,25]).
 
 all() ->[
 %% 		test_anlyse_tongji
@@ -19,6 +19,7 @@ all() ->[
 %% 		test_anlyse_he_spread
 %% 		test_link_he
 %% 		test_rem_same
+%% 		test_zhishu
 		test_omg
 		].
 
@@ -34,23 +35,24 @@ end_per_suite(_Config) ->
 test_omg(_) ->
 	ssqiu_server:start_link(),
 	L = [
-		 {head,[3]},
-		 {med,[1]},
-		 {tail,[2]},
-		 {repeat_tongji,[0,1]},
-		 {link,[0,2,3,4,5]},
-		 {range_sum,{89,89}},
-		 {jishu,[3,5]},
+%% 		 {head,[2]},
+%% 		 {med,[2]},
+%% 		 {tail,[2]},
+		 {repeat_tongji,[0]},
+		 {link,[0]},
+		 {range_sum,{90,100}},
+		 {jishu,[4]},
 		 {xiehao,[0,1,2,3,4]},
-		 {part,[{1,6},{0,1}]},
-		 {part,[{19,24},{2,7}]},
-		 {part,[{9,10},{1,7}]},
+%% 		 {part,[{1,6},{0,1}]},
+%% 		 {part,[{19,24},{1,7}]},
+%% 		 {part,[{21,25},{1,7}]},
+		 {part,[{19,25},{2,7}]},
 %% 		 {rem_he,{2,{1,6}}},
 %% 		 {rem_he,{5,{1,8}}},
-%% 		 {include,[1]},
-		 {exclude,[4,5,6,7,8]},
-%% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]},
-%% 		 {yu,[7,21]},
+%% 		 {include,[10]},
+		 {exclude,[4,5,6,13,14,15,16]},
+		 {include,[23,31]},
+%% 		 {yu,[9]},
 		{he_012,[2]}
 		],
 	
@@ -113,7 +115,7 @@ test_anlyse_yu(_) ->
 				end, [], lists:seq(77, 88)),	
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,R]),
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,ssq:anlyse2(R)])
-	end, [], lists:seq(3, 16)),
+	end, [], lists:seq(3, 33)),
 	ok.
 
 test_anlyse_he_spread(_) ->
@@ -167,6 +169,15 @@ test_link_he(_) ->
 						[V|AccIn]
 				end, [], lists:seq(7, 70)),
 	error_logger:info_msg("~p -- link_he result:~p~n", [?MODULE,ssq:anlyse2(RR)]),
+	ok.
+
+test_zhishu(_) ->
+	ssqiu_server:start_link(),	
+	RR = lists:foldl(fun(Mod,AccIn) ->
+						V = ssqiu_server:auto_filter(zhishu, Mod),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+	error_logger:info_msg("~p -- zhishu result:~p~n", [?MODULE,ssq:anlyse2(RR)]),
 	ok.
 
 test_shake(_) ->
