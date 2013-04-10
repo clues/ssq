@@ -132,6 +132,12 @@ auto_filter(he_range,{Spoint,Mod}) ->
 auto_filter(he_spread,{Range,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,he_spread,{Range,Mod}});
 
+auto_filter(horse_yue,Mod) ->
+	gen_server:call(?MODULE, {auto_filter,horse_yue,Mod});
+
+auto_filter(horse_ri,Mod) ->
+	gen_server:call(?MODULE, {auto_filter,horse_ri,Mod});
+
 auto_filter(xiehao,Mod) ->
 	{Min,Max} = ssqiu_show:xielink_ifno(Mod),
 	gen_server:call(?MODULE, {auto_filter,xiehao,Mod,{Min,Max}});
@@ -778,6 +784,32 @@ handle_call({auto_filter,link_he,Mod}, From, #state{history=History,raw=Raw,tong
 	CurrntValue = Fun_Range(lists:sublist(TJ, Mod-1)),
 	{reply, {CurrntValue,Range,Mod}, State};
 
+handle_call({auto_filter,horse_ri,Mod}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
+	MaxIndex = length(History) - Mod-1,
+	RR1 = lists:foldl(fun(Index,Acc0)->
+						
+						L1 = lists:sublist(History, Index,Mod),
+						L2 = lists:sublist(History,Index+2,Mod),
+						Value = fun_horse1({L1,L2},0),
+						[Value|Acc0]
+					end, [], lists:seq(1, MaxIndex)),
+	Range={Min,Max} = {lists:min(RR1),lists:max(RR1)},
+	CurrntValue = fun_horse2({lists:sublist(History, Mod-1),lists:sublist(History,3, Mod-1)},0),
+	{reply, {CurrntValue,Range,Mod}, State};
+
+handle_call({auto_filter,horse_yue,Mod}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
+	MaxIndex = length(History) - Mod,
+	RR1 = lists:foldl(fun(Index,Acc0)->
+						
+						L1 = lists:sublist(History, Index,Mod),
+						L2 = lists:sublist(History,Index+1,Mod),
+						Value = fun_horse1({L1,L2},0),
+						[Value|Acc0]
+					end, [], lists:seq(1, MaxIndex)),
+	Range={Min,Max} = {lists:min(RR1),lists:max(RR1)},
+	CurrntValue = fun_horse1({lists:sublist(History, Mod-1),lists:sublist(History,2, Mod-1)},0),
+	{reply, {CurrntValue,Range,Mod}, State};
+
 
 handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw=Raw,tongji=TJ}=State) ->
 	   Based = lists:foldl(fun(Index,Acc) ->
@@ -1209,5 +1241,60 @@ local_xiehao_info([X|T],Old,AccIn) ->
 												AccIn
 										end	,
 	local_xiehao_info(T,Old,S).
-		
+
+minu_one(1) ->
+	33;
+minu_one(X) ->
+	X-1.
+plus_one(33) ->
+	1;
+plus_one(X) ->
+	X+1.
+
+minu_two(1) ->
+	32;
+minu_two(2) ->
+	33;
+minu_two(X) ->
+	X-2.
+plus_two(32) ->
+	1;
+plus_two(33) ->
+	2;
+plus_two(X) ->
+	X+2.
+
+fun_horse1({[],[]},Num) ->
+	Num;
+fun_horse1({[{_,L1}|T1],[{_,L2}|T2]},Num) ->
+	NewNum = lists:foldl(fun(X,AccIn) ->
+		IS_HIG = lists:member(plus_two(X), L2),
+		IS_LOW = lists:member(minu_two(X), L2),	
+		if
+			IS_HIG , IS_LOW ->
+				AccIn +2;
+			IS_HIG orelse IS_LOW ->
+				AccIn + 1;
+			true ->
+				AccIn
+		end	
+	end ,Num, L1),
+	fun_horse1({T1,T2},NewNum).	
+
+fun_horse2({[],[]},Num) ->
+	Num;
+fun_horse2({[{_,L1}|T1],[{_,L2}|T2]},Num) ->
+	NewNum = lists:foldl(fun(X,AccIn) ->
+		IS_HIG = lists:member(plus_one(X), L2),
+		IS_LOW = lists:member(minu_one(X), L2),	
+		if
+			IS_HIG , IS_LOW ->
+				AccIn +2;
+			IS_HIG orelse IS_LOW ->
+				AccIn + 1;
+			true ->
+				AccIn
+		end	
+	end ,Num, L1),
+	fun_horse2({T1,T2},NewNum).	
 		
