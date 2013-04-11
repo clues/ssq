@@ -100,6 +100,16 @@ auto_filter(repeat,Mod) ->
 	error_logger:info_msg("~p -- auto_filter repeat:~p~n", [?MODULE,R]),
 	R;
 
+auto_filter(horse_yue,Mod) ->
+	R = {CV,{Min,Max},Mod} = ssqiu_server:auto_filter(horse_yue, Mod),
+	error_logger:info_msg("~p -- auto_filter horse_yue:~p~n", [?MODULE,R]),
+	R;
+
+auto_filter(horse_ri,Mod) ->
+	R = {CV,{Min,Max},Mod} = ssqiu_server:auto_filter(horse_ri, Mod),
+	error_logger:info_msg("~p -- auto_filter horse_ri:~p~n", [?MODULE,R]),
+	R;
+
 auto_filter(xiehao,Mod) ->
 	R = {CV,{Min,Max},Mod} = ssqiu_server:auto_filter(xiehao, Mod),
 	error_logger:info_msg("~p -- auto_filter xiehao:~p~n", [?MODULE,R]),

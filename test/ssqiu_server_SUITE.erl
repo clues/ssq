@@ -11,6 +11,8 @@ all() ->[
 %% 		test_he012
 %% 		test_anlyse_he_jishu
 %% 		test_anlyse_xiehao
+%% 		test_anlyse_horse_yue
+		test_anlyse_horse_ri
 %% 		test_shake
 %% 		test_he_rang_10
 %% 		test_rem_he
@@ -19,8 +21,7 @@ all() ->[
 %% 		test_anlyse_he_spread
 %% 		test_link_he
 %% 		test_rem_same
-%% 		test_zhishu
-		test_omg
+%% 		test_omg
 		].
 
 suite() ->
@@ -86,6 +87,23 @@ test_anlyse_xiehao(_) ->
 						[V|AccIn]
 				end, [], lists:seq(7, 70)),
 	error_logger:info_msg("~p -- xiehao result:~p~n", [?MODULE,ssq:anlyse2(R)]),
+	ok.
+test_anlyse_horse_yue(_) ->
+	ssqiu_server:start_link(),	
+	R = lists:foldl(fun(Mod,AccIn) ->
+						V = ssq:auto_filter(horse_yue, Mod),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+	error_logger:info_msg("~p -- horse_yue result:~p~n", [?MODULE,ssq:anlyse2(R)]),
+	ok.
+
+test_anlyse_horse_ri(_) ->
+	ssqiu_server:start_link(),	
+	R = lists:foldl(fun(Mod,AccIn) ->
+						V = ssq:auto_filter(horse_ri, Mod),
+						[V|AccIn]
+				end, [], lists:seq(7, 70)),
+	error_logger:info_msg("~p -- horse_ri result:~p~n", [?MODULE,ssq:anlyse2(R)]),
 	ok.
 
 test_anlyse_tongji(_) ->
