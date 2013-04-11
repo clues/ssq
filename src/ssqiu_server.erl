@@ -1123,6 +1123,7 @@ code_change(OldVsn, State, Extra) ->
 load_from_file(File) ->
 	error_logger:info_msg("path::::::~p~n", [File]),
 	{ok,Io} = file:open(File, [read]),
+	error_logger:info_msg("path::::::~p~n", [File]),
 	loop_read_history(Io,[],[]).
 
 loop_read(Io,Rest) ->

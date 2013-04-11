@@ -35,24 +35,24 @@ end_per_suite(_Config) ->
 test_omg(_) ->
 	ssqiu_server:start_link(),
 	L = [
-%% 		 {head,[2]},
-%% 		 {med,[2]},
-%% 		 {tail,[2]},
+%% 		 {head,[3]},
+%% 		 {med,[1]},
+		 {tail,[1,2,3,4,5]},
 		 {repeat_tongji,[0]},
-		 {link,[0]},
-		 {range_sum,{90,100}},
-		 {jishu,[4]},
-		 {xiehao,[0,1,2,3,4]},
+		 {link,[3]},
+		 {range_sum,{107,107}},
+		 {jishu,[5]},
+		 {xiehao,[2,3]},
 %% 		 {part,[{1,6},{0,1}]},
-%% 		 {part,[{19,24},{1,7}]},
-%% 		 {part,[{21,25},{1,7}]},
+%% 		 {part,[{19,24},{2,7}]},
+		 {part,[{7,8},{1,7}]},
 		 {part,[{19,25},{2,7}]},
 %% 		 {rem_he,{2,{1,6}}},
 %% 		 {rem_he,{5,{1,8}}},
-%% 		 {include,[10]},
-		 {exclude,[4,5,6,13,14,15,16]},
-		 {include,[23,31]},
-%% 		 {yu,[9]},
+%% 		 {include,[1]},
+%% 		 {exclude,[4,5,6,7,8]},
+%% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]},
+%% 		 {yu,[7,21]},
 		{he_012,[2]}
 		],
 	
@@ -93,7 +93,7 @@ test_anlyse_tongji(_) ->
 	{RR1,RR2,RR3,RR4,RR5,RR6,RR7} = lists:foldl(fun(Mod,{L1,L2,L3,L4,L5,L6,L7}) ->
 						[R1,R2,R3,R4,R5,R6,R7] = ssq:auto_filter(tongji,Mod),
 						{[R1|L1],[R2|L2],[R3|L3],[R4|L4],[R5|L5],[R6|L6],[R7|L7]}
-				end, {[],[],[],[],[],[],[]},lists:seq(7, 70)),	
+				end, {[],[],[],[],[],[],[]},lists:seq(16, 70)),	
 	
 	error_logger:info_msg("~p -- repeat_TJ result:~p~n", [?MODULE,ssq:anlyse2(RR1)]),
 	error_logger:info_msg("~p -- link_TJ result:~p~n", [?MODULE,ssq:anlyse2(RR2)]),
@@ -112,7 +112,7 @@ test_anlyse_yu(_) ->
 		R = lists:foldl(fun(Mod,AccIn) ->
 						V = ssqiu_server:auto_filter(yu, {X,Mod}),
 						[V|AccIn]
-				end, [], lists:seq(77, 88)),	
+				end, [], lists:seq(7, 77)),	
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,R]),
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,ssq:anlyse2(R)])
 	end, [], lists:seq(3, 33)),
