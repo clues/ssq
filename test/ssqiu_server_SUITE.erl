@@ -4,7 +4,7 @@
 -module(ssqiu_server_SUITE).
 
 -compile(export_all).
--define(ACTUAL_DATA,[2,10,11,19,22,25]).
+-define(ACTUAL_DATA,[2,9,11,21,26,27]).
 
 all() ->[
 %% 		test_anlyse_tongji
@@ -12,7 +12,7 @@ all() ->[
 %% 		test_anlyse_he_jishu
 %% 		test_anlyse_xiehao
 %% 		test_anlyse_horse_yue
-		test_anlyse_horse_ri
+%% 		test_anlyse_horse_ri
 %% 		test_shake
 %% 		test_he_rang_10
 %% 		test_rem_he
@@ -21,7 +21,8 @@ all() ->[
 %% 		test_anlyse_he_spread
 %% 		test_link_he
 %% 		test_rem_same
-%% 		test_omg
+%% 		test_history_now
+		test_omg
 		].
 
 suite() ->
@@ -36,25 +37,25 @@ end_per_suite(_Config) ->
 test_omg(_) ->
 	ssqiu_server:start_link(),
 	L = [
-%% 		 {head,[3]},
-%% 		 {med,[1]},
-		 {tail,[1,2,3,4,5]},
-		 {repeat_tongji,[0]},
+%% 		 {head,[1]},
+%% 		 {med,[1,3,4,5,6,0]},
+		 {tail,[2,3,4]},
+%% 		 {repeat_tongji,[1]},
 		 {link,[3]},
-		 {range_sum,{107,107}},
+		 {range_sum,{100,157}},
 		 {jishu,[5]},
-		 {xiehao,[2,3]},
-%% 		 {part,[{1,6},{0,1}]},
-%% 		 {part,[{19,24},{2,7}]},
-		 {part,[{7,8},{1,7}]},
-		 {part,[{19,25},{2,7}]},
+		 {xiehao,[1,2,3,4]},
+%% 		 {part,[{1,5},{0,1}]},
+%% 		 {part,[{19,25},{2,7}]},
+%% 		 {part,[{7,8},{1,7}]},
+%% 		 {part,[{19,25},{2,7}]},
 %% 		 {rem_he,{2,{1,6}}},
 %% 		 {rem_he,{5,{1,8}}},
 %% 		 {include,[1]},
-%% 		 {exclude,[4,5,6,7,8]},
-%% 		 {include,[4,5,6, 22,23,24, 3,4, 9,10, 15,16]},
+%% 		 {exclude,[14,28,15,30]},
+		 {include,[16]},
 %% 		 {yu,[7,21]},
-		{he_012,[2]}
+		{he_012,[2,0]}
 		],
 	
 	lists:foreach(fun({Type,Value}) ->
@@ -131,7 +132,7 @@ test_anlyse_yu(_) ->
 						V = ssqiu_server:auto_filter(yu, {X,Mod}),
 						[V|AccIn]
 				end, [], lists:seq(7, 77)),	
-		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,R]),
+%% 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,R]),
 		error_logger:info_msg("~p -- anlyse_yu_~p:~p~n", [?MODULE,X,ssq:anlyse2(R)])
 	end, [], lists:seq(3, 33)),
 	ok.
@@ -276,6 +277,12 @@ test_he_rang_10(_) ->
 	
 	lists:foreach(Fun, [60,70,80,90,100,110,120,130,140,150,160]),
 	ok.
+
+test_history_now(_) ->
+	ssqiu_server:start_link(),
+	ssqiu_server:auto_filter(repeat_all, ?ACTUAL_DATA),
+	ok.	
+
 
 %%map() ->Part
 map(5) ->

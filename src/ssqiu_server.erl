@@ -142,6 +142,10 @@ auto_filter(horse_ri,Mod) ->
 auto_filter(xiehao,Mod) ->
 	{Min,Max} = ssqiu_show:xielink_ifno(Mod),
 	gen_server:call(?MODULE, {auto_filter,xiehao,Mod,{Min,Max}});
+
+auto_filter(repeat_all,Han) ->
+	gen_server:call(?MODULE, {repeat_all,Han});
+
 auto_filter(yu,{Yu,Mod}) ->
 	gen_server:call(?MODULE, {auto_filter,yu,{Yu,Mod}});
 
@@ -833,6 +837,23 @@ handle_call({auto_filter,xiehao,Mod,{Min,Max}}, From, #state{history=History,raw
 					end, 0, lists:seq(1, Mod-1)),
 	{reply, {Based,{Min,Max},Mod}, State};
 
+handle_call({repeat_all,Test}, From, #state{history=History}=State) ->
+	lists:foreach(fun(X) ->
+						  put(X,0)
+				  end, lists:seq(0, 6)),
+	lists:foldl(fun(Hang,Accin) ->
+						Old = element(2,Hang),
+						campare_as(Test,Old)
+				end, 0, History), 
+	error_logger:info_msg("~p -- repeat_all result:~p~n", [?MODULE,{get(6),
+																	   get(5),
+																	   get(4),
+																	   get(3),
+																	   get(2),
+																	   get(1),
+																	   get(0)}]),
+	{reply, ok, State};
+
 
 handle_call({auto_filter,zhishu,Mod}, From, #state{history=History}=State) ->
 	   
@@ -1327,3 +1348,16 @@ fun_horse2({[{_,L1}|T1],[{_,L2}|T2]},Num) ->
 		end	
 	end ,Num, L1),
 	fun_horse2({T1,T2},NewNum).	
+
+campare_as(New,New) ->
+	put(6,get(6)+1);
+campare_as(New,Old) ->
+	N = lists:foldl(fun(X,Accin) ->
+						case lists:member(X, Old) of
+							true ->
+								Accin +1;
+							false ->
+								Accin
+						end
+				end, 0, New),
+	put(N,get(N)+1).
