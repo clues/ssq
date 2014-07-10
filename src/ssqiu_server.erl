@@ -15,7 +15,7 @@
 -define(RAW_FILE,".ssq_raw").
 -define(LAST_FILE,".ssq_last").
 -define(TEMP_FILE,".ssq_temp").
--define(TEST_PATH,"/home/clues/workspace/ssqiu").
+-define(TEST_PATH,"/home/caolinong/git/ssq").
 -define(NUM_MEDIA,99).
 -define(ZHISHU_LIST,[2,3,5,7,11,13,17,19,23,29,31]).
 %% --------------------------------------------------------------------
@@ -24,6 +24,8 @@
 		 add_case/2,
 		 get_cases/0,
 		 get_state/0,
+		 minu_one/1,
+		 plus_one/1,
 		 get_omg/0,
 		 get/2,
 		 get/3,

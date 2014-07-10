@@ -203,17 +203,17 @@ link_info(Data,Num,RR) ->
 	link_info(tl(Data),Num,[R|RR]).
 
 xielink_ifno(Mod) ->
-	{ok,Data} = gen_server:call(ssqiu_server, {get_history,all}),
-	xielink_ifno(Data,Mod,[]).	
+	{ok,History} = gen_server:call(ssqiu_server, {get_history,all}),
+	xielink_ifno(History,Mod,[]).	
 
-xielink_ifno(Data,Mod,RR) when length(Data) =< Mod ->
+xielink_ifno(History,Mod,RR) when length(History) =< Mod ->
 	{lists:min(RR),lists:max(RR)};
-xielink_ifno(Data,Mod,RR) ->
+xielink_ifno(History,Mod,RR) ->
 	{R,_} = lists:foldl(fun({_,IntL},{Acc,Index}) ->
-					{_,H2} = lists:nth(Index + 1, Data),
+					{_,H2} = lists:nth(Index + 1, History),
 					N =lists:foldl(fun(X,AccIn) ->
-										IS_HIG = lists:member(X+1, H2),
-										IS_LOW = lists:member(X-1, H2),
+										IS_HIG = lists:member(ssqiu_server:plus_one(X), H2),
+										IS_LOW = lists:member(ssqiu_server:minu_one(X), H2),
 										if
 											IS_HIG , IS_LOW ->
 												AccIn +2;
@@ -224,9 +224,9 @@ xielink_ifno(Data,Mod,RR) ->
 										end	
 								end, Acc, IntL),
 					{N,Index+1}
-					end, {0,1}, lists:sublist(Data, Mod)),
+					end, {0,1}, lists:sublist(History, Mod)),
 
-	xielink_ifno(tl(Data),Mod,[R|RR]).
+	xielink_ifno(tl(History),Mod,[R|RR]).
 
 	
 	

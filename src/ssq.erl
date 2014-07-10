@@ -160,6 +160,7 @@ anlyse([{CV,{VL,VR},Mod}|T],R) ->
 %%Value choosed,must meet Min =< Value =< Max
 anlyse2(L) ->
 	anlyse2(L,{[0],[999]}).
+
 anlyse2([],{MaxL,MinR}) ->
 	[{min,lists:max(MaxL)},{max,lists:min(MinR)}];
 anlyse2([{CV,{VL,VR},X,_}|T],{MaxL,MinR}) ->
